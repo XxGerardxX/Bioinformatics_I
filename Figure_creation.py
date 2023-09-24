@@ -1,4 +1,6 @@
 import csv
+
+import numpy as np
 import pandas as pd
 import scipy.stats as sp
 import matplotlib.pyplot as plt
@@ -86,14 +88,26 @@ for i in range(len(ch_1_df_sorted_val["Genomic_Coordinate"]) - 1):
         correlation_v.append(abs(cor_v))
 
 
-distance.sort()
-# correlation_v.sort(reverse=True)
-correlation_v.sort()
-print(distance)
-print(correlation_v)
+# distance.sort()
+# correlation_v.sort()
+distance = np.array(distance, dtype=float)
 
-plt.plot(distance,correlation_v)
+# slope, intercept, r, p, se = sp.linregress(distance,correlation_v)
+slope, intercept, r_value, p_value, std_err = sp.linregress(distance, correlation_v)
+
+# Calculate the regression line
+regression_line = slope * distance + intercept
+
+
+# plt.scatter(distance, correlation_v, label='Data')
+plt.plot(distance, regression_line, color='red', label='Linear Regression Line')
+plt.ylim(0,1)
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.legend()
 plt.show()
+
+
 
 
 
