@@ -3,6 +3,7 @@ import csv
 import numpy as np
 import pandas as pd
 import scipy.stats as sp
+import scipy.optimize as spo
 import matplotlib.pyplot as plt
 
 # Methylation correlations between CpG sites were assessed by the absolute
@@ -56,7 +57,7 @@ merged_df = assay.merge(brca[["Unnamed: 0", "Genomic_Coordinate", "Chromosome"]]
 sorted_df = merged_df.sort_values(["Chromosome"])
 
 # filtering dataframe 1 on chromosome value and genomic coordinate sorting
-# ch_1_df = sorted_df[sorted_df["Chromosome"] == "1"]
+# ch_1_df = sorted_df[sorted_df["Chromosome"] == "1"]   ###########change this for specific CHROMOSOME!!!!#######
 ch_1_df = sorted_df
 
 
@@ -87,9 +88,18 @@ for i in range(len(ch_1_df_sorted_val["Genomic_Coordinate"]) - 1):
         cor_v, pval = sp.pearsonr(first_calc_val,second_calc_val)
         correlation_v.append(abs(cor_v))
 
-
+#
 # distance.sort()
 # correlation_v.sort()
+
+distances = np.array(distance)
+correlation_v = np.array(correlation_v)
+# print(distance)
+# correlation_v = np.array(correlation_v)
+# arg_distance = np.argsort(distance)
+
+
+
 distance = np.array(distance, dtype=float)
 
 # slope, intercept, r, p, se = sp.linregress(distance,correlation_v)
@@ -101,7 +111,7 @@ regression_line = slope * distance + intercept
 
 # plt.scatter(distance, correlation_v, label='Data')
 plt.plot(distance, regression_line, color='red', label='Linear Regression Line')
-plt.ylim(0,1)
+plt.ylim(0.1,0.6)
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.legend()
