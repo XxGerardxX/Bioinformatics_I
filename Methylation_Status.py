@@ -12,6 +12,7 @@ assay = pd.read_csv("assay.csv")
 column_names = assay.columns
 # print(column_names)
 
+column_values = assay.loc[:,"Unnamed: 0"]
 
 
 
@@ -31,6 +32,7 @@ def threshold_function(cell_value):
 
 # Apply the function to each cell in the DataFrame
 new_df = altered_df.applymap(threshold_function)
+new_df = pd.concat([pd.Series(column_values, name='Unnamed: 0'), new_df], axis=1)
 new_df.to_csv("Boolean_assay.csv", encoding='utf-8', index=False)
 
 # Display the new DataFrame
