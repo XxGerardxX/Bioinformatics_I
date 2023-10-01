@@ -8,13 +8,13 @@ import pandas as pd
 
 # creating pandas dataframe
 brca = pd.read_csv("brca.csv")
-assay = pd.read_csv("Boolean_assay.csv")
-
+boolean_val= pd.read_csv("Boolean_assay.csv")
+assay_values = pd.read_csv("assay.csv")
 
 
 '''Sorting and calculating the assay csv'''
 
-merged_df = assay.merge(brca[["Unnamed: 0", "Genomic_Coordinate", "Chromosome"]], on="Unnamed: 0")
+merged_df = boolean_val.merge(brca[["Unnamed: 0", "Genomic_Coordinate", "Chromosome"]], on="Unnamed: 0")
 sorted_df = merged_df.sort_values(["Chromosome"]) # sorts values based on what chromosome
 sorted_df = sorted_df[sorted_df["Chromosome"] == "1"] # throws filter on df that only chromosome 1 is taken for
 # calculations
@@ -25,6 +25,7 @@ df_column_names = distance_df.columns
 df_column_names = df_column_names[1:51]
 
 # lists for the columns
+b_values_patient = []
 upstream_distance_l = []
 downstream_distance_l = []
 upstream_m_stat_l = []
@@ -53,7 +54,7 @@ for coordinate in range(len(distance_df["Genomic_Coordinate"])-1):
     #Taking patient 1 to 50
 
 
-for methylation_val in range(len(distance_df[df_column_names[0]])-1):
+for methylation_val in range(len(distance_df[df_column_names[0]])-1):   # change df columnnames to change the patient
     main_m_index = distance_df.iloc[methylation_val]
     upstream_m_index = distance_df.iloc[methylation_val - 1]
     downstream_m_index = distance_df.iloc[methylation_val + 1]
@@ -66,13 +67,16 @@ for methylation_val in range(len(distance_df[df_column_names[0]])-1):
 
 
 
+
+
+
+
 #appending NaN values
 upstream_distance_l.append(None)
 downstream_distance_l.append(None)
 
 upstream_m_stat_l.append(None)
 downstream_m_stat_l.append(None)
-
 
 upstream_distance_l[0] = None
 
@@ -82,6 +86,13 @@ distance_df["Downstream_distance"] = downstream_distance_l
 distance_df["Upstream_methylation"] = upstream_m_stat_l
 distance_df["Downstream_methylation"] = downstream_m_stat_l
 
+
+
+
+data = {"B_Val": b_values_patient,"Upstream_distance": upstream_distance_l, "Downstream_distance": downstream_distance_l,
+        "Upstream_methylation": upstream_m_stat_l,"Downstream_methylation": downstream_m_stat_l  }
+
+final_df = pd.DataFrame(data)
 #creating the dataframe csv
-# print(distance_df)
-distance_df.to_csv("DF_With_Distances.csv", encoding='utf-8', index=False)
+
+final_df.to_csv("DF_With_Distances.csv", encoding='utf-8', index=False)
