@@ -1,7 +1,3 @@
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
-import numpy as np
 import pandas as pd
 
 '''Reading in the csv.files'''
@@ -95,4 +91,4 @@ data = {"B_Val": b_values_patient,"Upstream_distance": upstream_distance_l, "Dow
 final_df = pd.DataFrame(data)
 #creating the dataframe csv
 
-final_df.to_csv("DF_With_Distances.csv", encoding='utf-8', index=False)
+final_df.to_csv("DF_With_Distances_2.csv", encoding='utf-8', index=False)
