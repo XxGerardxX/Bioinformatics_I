@@ -22,10 +22,10 @@ nine_f_data = pd.read_csv("nine_features.csv")
 
 
 #creating new dataframe
-nine_features_df = pd.DataFrame(columns=['CsG Names','Island', 'Shore', 'Shelf', 'OpenSea','Probe','Probe 10','Promotor','Gene Body', 'Intergenic Region' ])
+nine_features_df = pd.DataFrame(columns=['CsG','Island', 'Shore', 'Shelf', 'OpenSea','Probe','Probe 10','Promotor','Gene Body', 'Intergenic Region' ])
 
 #first column
-nine_features_df['CsG Names'] = nine_f_data['Unnamed: 0']
+nine_features_df["CsG"] = nine_f_data['Unnamed: 0']
 
 # Shore Shelf Island and OpenSea
 unique_Island_items = ['S_Shore','N_Shore','S_Shelf','N_Shelf','Island','OpenSea']
