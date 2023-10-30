@@ -3,23 +3,81 @@ import pandas as pd
 pd.set_option('display.max_columns', None)
 
 '''reading in all the CSV files'''
-brca = pd.read_csv("brca.csv")
+LIHC = pd.read_csv("brca.csv")
 assay = pd.read_csv("assay.csv")
 boolean_assay = pd.read_csv("Boolean_assay.csv")
 nine_values = pd.read_csv("final_nine.csv")
 rest_values = pd.read_csv("48_peaks_allignment.csv")
 
+
+# TODO add this function as a subfunction to the merge_df main function
+# TODO make the sort function for multiple chromosomes possible
+# TODO make filter for multiple patients
+def dataframe_filter(dataframe, chromosome_filter = "no", patient_filter="no", b_values_binary = "no" , creating_csv = "no", sorting = "no"):
+    """Input: Dataframe
+    Optional: chromosome filtering (default no) patient filtering (default = no)
+    Output: dataframe filtered on chromosome or specific patient column"""
+
+    dataframe = dataframe
+    if chromosome_filter == "yes":
+        try:
+            all_chromosomes = dataframe["Chromosome"]
+            all_chromosomes = set(all_chromosomes.tolist())
+            which_chromosome = input(f'from the following list of chromosomes: {all_chromosomes} which chromosome do you want? ')
+            dataframe = dataframe[dataframe["Chromosome"] == which_chromosome]
+        except Exception as e:
+            print(f"The following error occurred {e}")
+
+    if patient_filter =="yes":
+        dataframe_columns = dataframe.columns.tolist()
+        which_patient_index = int(input(f'Which patient do you want to choose from {dataframe_columns}?\n Give a number '))
+        name_column_index = int(input(f"which column contains the index names for ever row? (The CsG's) " ))
+        try:
+            chosen_column = dataframe.iloc[:,which_patient_index]
+            name_column = dataframe.iloc[:,name_column_index]
+            dataframe = pd.DataFrame({"CsG": name_column, "Patient_1": chosen_column})
+        except Exception as e:
+            print(f"The following error occurred {e}")
+
+    if b_values_binary == "yes":
+        dataframe['Patient_1'] = dataframe['Patient_1'].apply(lambda x: 0 if x < 0.5 else 1)
+
+    if sorting == "yes":
+        try:
+            distance_column_name = "Genomic_Coordinate"
+            dataframe = dataframe.sort_values(by=distance_column_name)
+        except Exception as e:
+            print(f"The following error occurred {e}")
+
+    # creating a CSV output
+
+    if creating_csv == "yes":
+        name_csv = input("What is the name of this csv? ")
+
+        try:
+            dataframe.to_csv(name_csv, encoding='utf-8', index=False)
+        except:
+            print("The csv creation failed")
+        else:
+            print("The csv is created!")
+
+
+
+    return dataframe
+
+
+
+
 # TODO: Make merge.df cleaner by implementing new method for changing Unnamed:0 (eg put Unnamed:0 in a list and every
 #  item in that list gets changed to x where x is another name)
-
-def merge_df(two_df_list, values_added_to_merge_df_list, merging_column_index, filtering="no", sorting="no", creating_csv="no"):
+def merge_df(two_df_list, values_added_to_merge_df_list, merging_column_index, creating_csv="no"):
     """Merges Dataframes and creates the necessary csv
     Input: two dataframes, the values of df two that need to be merged on to df one, the merging column index parameter
     Optional: sorting the data (default = no), creating csv (default = no)
     Output: dataframe two merged with dataframe one"""
     merging_column_index = int(merging_column_index)
-    sorting = str.casefold(sorting)
     creating_csv = str.casefold(creating_csv)
+
     if all(isinstance(item, str) for item in values_added_to_merge_df_list) == False:
         print("not all values in the second list are strings")
 
@@ -60,19 +118,6 @@ def merge_df(two_df_list, values_added_to_merge_df_list, merging_column_index, f
     else:
         print("The merging worked!")
 
-    # filtering the dataframe on a specific chromosome and checking if sorting is necessary and if dataframe value isn't none
-    ask_filter = str.casefold(filtering)
-
-    if ask_filter == "yes":
-        filtering_chr_value = str(input("On which chromosome needs the data to be filtered? "))
-
-        try:
-            merged_df = merged_df[merged_df["Chromosome"] == filtering_chr_value]
-            if sorting == "yes":
-                merged_df = merged_df.sort_values("Genomic_Coordinate")
-        except:
-            print("the filtering failed (check hardcoded names)")
-
     # creating a CSV output
 
     if creating_csv == "yes":
@@ -87,15 +132,17 @@ def merge_df(two_df_list, values_added_to_merge_df_list, merging_column_index, f
 
     return merged_df
 
-
-
-
-def neighbouring_distances(dataframe_with_distances, distance_column_name):
+def neighbouring_distances(dataframe_with_distances, distance_column_name, name_column = "CsG"):
     """Calculates the distances between the neighbouring chromosomes
     Input: dataframe with distances, the column name where the distances are in
     Output: 2 lists, up and downstream methylation"""
+    dataframe_with_distances = dataframe_with_distances.sort_values(by = distance_column_name)
+    CsG_Names = dataframe_with_distances.loc[:,name_column]
     upstream_distances = []
     downstream_distances = []
+
+
+
 
     for distance in range(len(dataframe_with_distances[distance_column_name]) - 1):
         # setting up distance calculations for up and downstream distances
@@ -112,140 +159,83 @@ def neighbouring_distances(dataframe_with_distances, distance_column_name):
 
     upstream_distances.append(None)
     downstream_distances.append(None)
-    return upstream_distances, downstream_distances
+
+    calculated_distances_df = pd.DataFrame({"CsG":CsG_Names,"Upstream_Dis": upstream_distances, "Downstream_Dis": downstream_distances})
+
+    return calculated_distances_df
 
 
-''' The function neighbouring methylation value needs cleanup'''
+def neighbouring_methyl_val(dataframe_with_methylation_vals, methylation_column_name, name_column="CsG"):
+    CsG_Names = dataframe_with_methylation_vals[name_column]
+    upstream_m_values = []
+    downstream_m_values = []
 
-def neighbouring_methylation_value(dataframe_with_methylation_values, non_bool_dataframe_methyl_values):
-    """Give a dataframe with beta values for multiple patients.
-     The first columns are the cg names and thus are not taken into account
-     Input: Dataframe with methylation values from different patients,
-     Output: Upstream and downstream methylation values in 2 lists and the b values"""
+    for m_val in range(len(dataframe_with_methylation_vals[methylation_column_name]) - 1):
+        # setting up distance calculations for up and downstream distances
+        main_m_val = dataframe_with_methylation_vals.iloc[m_val]
+        upstream_m_val = dataframe_with_methylation_vals.iloc[m_val - 1]
+        downstream_m_val = dataframe_with_methylation_vals.iloc[m_val + 1]
 
-    b_values_patient = []
-    upstream_methylation_values = []
-    downstream_methylation_values = []
+        upstream_m_values.append(upstream_m_val[methylation_column_name])
+        downstream_m_values.append(downstream_m_val[methylation_column_name])
 
-    patient_number = 0
-    try:
-        patient_number = int(input("which patient do you want? "))
-    except:
-        print("This is not a valid input!")
+    upstream_m_values.append(None)
+    downstream_m_values.append(None)
 
-    '''Getting for the specific patient the beta values of the non-boolean dataframe'''
-    df_column_names = non_bool_dataframe_methyl_values.columns
-    df_column_names = df_column_names[0:51]
+    calculated_M_Vals_df = pd.DataFrame({
+        name_column: CsG_Names,
+        "Upstream_M_Vals": upstream_m_values,
+        "Downstream_M_Vals": downstream_m_values
+    })
 
-
-    one_patient_df = non_bool_dataframe_methyl_values[df_column_names[patient_number]]
-    for i in one_patient_df:
-        b_values_patient.append(i)
-
-    '''Calculating the binary methylation values for a specific patient'''
-
-    for methylation_val in range(len(dataframe_with_methylation_values[df_column_names[patient_number]]) - 1):
-        main_m_index = dataframe_with_methylation_values.iloc[methylation_val]
-        upstream_m_index = dataframe_with_methylation_values.iloc[methylation_val - 1]
-        downstream_m_index = dataframe_with_methylation_values.iloc[methylation_val + 1]
-
-        upstream_m_value = upstream_m_index[df_column_names[patient_number]]
-        downstream_m_value = downstream_m_index[df_column_names[patient_number]]
-
-        upstream_methylation_values.append(upstream_m_value)
-        downstream_methylation_values.append(downstream_m_value)
-
-    upstream_methylation_values.append(None)
-    downstream_methylation_values.append(None)
-
-
-
-
-    return upstream_methylation_values, downstream_methylation_values, b_values_patient
-
-
-# TODO add this function as a subfunction to the merge_df main function
-# TODO make the sort function for multiple chromosomes possible
-# TODO make a patient filter
-
-
-def dataframe_filter(dataframe, chromosome_filter = "no", patient_filter="no" ):
-    dataframe = dataframe
-    if chromosome_filter == "yes":
-        all_chromosomes = dataframe["Chromosome"]
-        all_chromosomes = set(all_chromosomes.tolist())
-        which_chromosome = input(f'from the following list of chromosomes: {all_chromosomes} which chromosome do you want?')
-        dataframe = dataframe[dataframe["Chromosome"] == which_chromosome]
-
-    return dataframe
-
-
+    return calculated_M_Vals_df
 
 
 
 if __name__ == "__main__":
 
-    '''merging non boolean dataframes'''
-    need_to_be_merged = [assay, brca]
-    merged_on_values = ["CsG", "Genomic_Coordinate", "Chromosome"]
-    merged_on = 0
-    merged_df = merge_df(need_to_be_merged, merged_on_values, merged_on, filtering="no", sorting="yes", creating_csv="no")
+    #0 which patient do you want?
+    ## filter the assay data (csv was created)
+    filtered_assay_data = dataframe_filter(assay, chromosome_filter="no",patient_filter="yes",b_values_binary="yes") # assay with binary value and patient 1 is created
+
+    # 1) which patient and which chromosome?
+    ## merge LIHC and the filtered assay (csv was created to test)
+    merge_assay_columns = filtered_assay_data.columns.tolist()
+    merged_LIHC_filtered_assay = merge_df([LIHC,filtered_assay_data],merge_assay_columns,0)
+
+    # 2) append the rest of the 9+48 values (csv was created to test) for both merge and join
+    merged_9_columns = nine_values.columns.tolist()
+    merged_9_to_df = merge_df([merged_LIHC_filtered_assay,nine_values],merged_9_columns,0)
+
+    merged_9_48 = merged_9_to_df.join(rest_values)
+
+
+    # 3) filter on chromosome 1 (the csv was created to test)
+    final_df_chr_1 = dataframe_filter(merged_9_48, chromosome_filter="yes") #creates unnamed column because of first column 48 features for this drop the unnamed column
+    # print(final_df_chr_1.columns)
+    final_df_chr_1 = final_df_chr_1.drop("Unnamed: 0",axis=1)
+
+    ## the data sorting on distance
+    final_df_sorted_distance = neighbouring_distances(final_df_chr_1, distance_column_name="Genomic_Coordinate") # creating df with distances
+
+
+    #4) calculate distances and methylation values
+    final_distance_names = final_df_sorted_distance.columns.tolist()
+    merged_distances = merge_df([final_df_chr_1,final_df_sorted_distance],final_distance_names, 0)
+    merged_distances = dataframe_filter(merged_distances, sorting="yes")
+
+    # calculating the m values
+
+    adding_to_final_methylation_status = neighbouring_methyl_val(merged_distances,"Patient_1")
+    adding_to_final_methylation_status.to_csv("aaa.csv")
+    final_methylation_names = adding_to_final_methylation_status.columns.tolist()
+    merged_methylation = merge_df([merged_distances,adding_to_final_methylation_status],final_methylation_names,0,creating_csv="yes")
 
 
 
-    '''merging boolean dataframes'''
-    need_to_be_merged_bool = [boolean_assay, brca]
-    merged_on_values_bool = ["CsG", "Genomic_Coordinate", "Chromosome"]
-    merged_on_bool = 0
-    merged_bool_df = merge_df(need_to_be_merged_bool, merged_on_values_bool, merged_on_bool, filtering="no",
-                              sorting="yes", creating_csv="no")
-
-
-    '''creating the big dataframe the 9 features, the patient data and the distances in it'''
-    # ntbm_non_bool_nine = [merged_bool_df, nine_values]
-    # merging_on_values_nine = nine_values.columns.tolist()
-
-
-    # merged_nine_and_bool = merge_df(ntbm_non_bool_nine, merging_on_values_nine, merged_on, filtering="no", sorting="yes", creating_csv = "yes")
-
-    nine_with_patient = pd.read_csv("Coordinates_Patient_Nine_Features.csv")
-    '''Creating the up and downstream methylation data'''
-
-    # using merged dataframes
-    # upstream_distances, downstream_distances = neighbouring_distances(dataframe_with_distances=merged_bool_df,
-    #                                                                   distance_column_name="Genomic_Coordinate")
-    # upstream_methylation, downstream_methylation, beta_values_patient = neighbouring_methylation_value(merged_bool_df,
-    #                                                                                                    merged_df)
-    #
-    # # creating the dataframe
-    # data = {"B_Val": beta_values_patient, "Upstream_distance": upstream_distances,
-    #         "Downstream_distance": downstream_distances,
-    #         "Upstream_methylation": upstream_methylation, "Downstream_methylation": downstream_methylation}
-    #
-    # # creating the csv out of the dataframe. CSV is meant for the first basic random forest model
-    # final_df = pd.DataFrame(data)
-    # final_df.to_csv("DF_With_Distances_2.csv", encoding='utf-8', index=False)
-
-    '''Adding the 48 columns to the rest of the data'''
-    # columns_nine = nine_with_patient.loc[:,"CsG"]
-    # rest_values.iloc[:,0] = columns_nine
-    # named_first_column = pd.DataFrame(rest_values)
-    # named_first_column.to_csv("Changed_with_48.csv", encoding='utf-8', index=False)
-    #
-    # changed_48 = pd.read_csv("Changed_with_48.csv")
 
 
 
-    #merging 48 to the rest of the data
-    # final_merge_datasets = [nine_with_patient,changed_48]
-    # values_added_final = changed_48.columns.tolist()
-    # merged_on_final = 0
-
-    # final_merge = merge_df(final_merge_datasets, values_added_final , merged_on_final, filtering="no", sorting="yes", creating_csv = "yes")
-
-    ''' calculating methylation values'''
-    # neighbouring_methylation_value(boolean_assay, assay)
-    dataframe_filter(brca, chromosome_filter="yes")
 
 
 
