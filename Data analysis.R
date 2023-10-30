@@ -1,11 +1,21 @@
-
+library(SummarizedExperiment)
 library(writexl)
-chromosome <- rowData(brca)$Chromosome 
-genomic_coord <- rowData(brca)$Genomic_Coordinate
-assay(brca)
+lihc <- readRDS("LIHC_methyl450k_subset_summexp.rds")
+lihc
+rowData(lihc)
 
-rowd <- rowData(brca)
-assay <- assay(brca)
+
+
+
+
+
+
+chromosome <- rowData(lihc)$Chromosome 
+genomic_coord <- rowData(lihc)$Genomic_Coordinate
+assay(lihc)
+
+rowd <- rowData(lihc)
+assay <- assay(lihc)
 
 
 write.csv(assay, "assay.csv")
