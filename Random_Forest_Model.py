@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 dataset = pd.read_csv("DF_With_Distances.csv")
 dataset = dataset.dropna(axis=0, how='any')
 
-final_dataset = pd.read_csv("all_features.csv")
+final_dataset = pd.read_csv("it_worked.csv")
 final_dataset = final_dataset.dropna(axis=0, how='any')
 
 
@@ -80,11 +80,18 @@ downstream_distance = dataset['Downstream_distance']
 # Define features and target variables
 X = dataset[['Upstream_methylation', 'Downstream_methylation', 'Upstream_distance', 'Downstream_distance']]
 y_upstream = dataset['B_Val'].apply(lambda x: 0 if x < 0.5 else 1)  # Y MOET ALLEEN B VALUES ZIJN
-random_forest(X, y_upstream)
+# random_forest(X, y_upstream)
 
-
+'''Actual full data run'''
 # final dataset
-b_val_final = final_dataset["Beta"]
+X_final_columns = final_dataset.columns.tolist()
+X_final_columns = X_final_columns[5:]
+X_final_dataset = final_dataset[X_final_columns]
+
+
+Y_final_dataset= final_dataset["Patient_1"]
+
+random_forest(X_final_dataset,Y_final_dataset)
 
 
 

@@ -227,11 +227,14 @@ if __name__ == "__main__":
     # calculating the m values
 
     adding_to_final_methylation_status = neighbouring_methyl_val(merged_distances,"Patient_1")
-    adding_to_final_methylation_status.to_csv("aaa.csv")
     final_methylation_names = adding_to_final_methylation_status.columns.tolist()
     merged_methylation = merge_df([merged_distances,adding_to_final_methylation_status],final_methylation_names,0,creating_csv="yes")
 
 
+
+    #5) putting the beta values in column 1 because of the way you can index it during running the random forest file
+    #in this case, the dataframe has the CsG's the Gene symbols ,the genomic coordinate  the and the chromosome number that dont have to be used
+    ### not nessecary they are the first 4 columns of the dataframe :)
 
 
 
