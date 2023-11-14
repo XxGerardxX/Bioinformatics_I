@@ -13,7 +13,7 @@ rest_values = pd.read_csv("48_peaks_allignment.csv")
 # TODO add this function as a subfunction to the merge_df main function
 # TODO make the sort function for multiple chromosomes possible
 # TODO make filter for multiple patients
-def dataframe_filter(dataframe, chromosome_filter = "no", patient_filter="no", b_values_binary = "no" , creating_csv = "no", sorting = "no"):
+def dataframe_filter(dataframe, chromosome_filter = "no", patient_filter="no", b_values_binary = "no" , creating_csv = "no", sorting = "no", which_patient_index = 1):
     """Input: Dataframe
     Optional: chromosome filtering (default no) patient filtering (default = no)
     Output: dataframe filtered on chromosome or specific patient column"""
@@ -30,17 +30,17 @@ def dataframe_filter(dataframe, chromosome_filter = "no", patient_filter="no", b
 
     if patient_filter =="yes":
         dataframe_columns = dataframe.columns.tolist()
-        which_patient_index = int(input(f'Which patient do you want to choose from {dataframe_columns}?\n Give a number '))
+        which_patient_index = int(input(f'Which patient do you want to choose from {dataframe_columns}?\n Give the number of the column '))
         name_column_index = int(input(f"which column contains the index names for ever row? (The CsG's) " ))
         try:
             chosen_column = dataframe.iloc[:,which_patient_index]
             name_column = dataframe.iloc[:,name_column_index]
-            dataframe = pd.DataFrame({"CsG": name_column, "Patient_1": chosen_column})
+            dataframe = pd.DataFrame({"CsG": name_column, f"Patient_{which_patient_index -1 }": chosen_column})
         except Exception as e:
             print(f"The following error occurred {e}")
 
     if b_values_binary == "yes":
-        dataframe['Patient_1'] = dataframe['Patient_1'].apply(lambda x: 0 if x < 0.5 else 1)
+        dataframe[f'Patient_{which_patient_index -1 }'] = dataframe[f'Patient_{which_patient_index -1}'].apply(lambda x: 0 if x < 0.5 else 1)
 
     if sorting == "yes":
         try:
@@ -226,7 +226,7 @@ if __name__ == "__main__":
 
     # calculating the m values
 
-    adding_to_final_methylation_status = neighbouring_methyl_val(merged_distances,"Patient_1")
+    adding_to_final_methylation_status = neighbouring_methyl_val(merged_distances,"Patient_3")
     final_methylation_names = adding_to_final_methylation_status.columns.tolist()
     merged_methylation = merge_df([merged_distances,adding_to_final_methylation_status],final_methylation_names,0,creating_csv="yes")
 
