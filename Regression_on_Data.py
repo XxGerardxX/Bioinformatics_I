@@ -22,7 +22,6 @@ ch_1_df = sorted_df[sorted_df["Chromosome"] == "1"]  ###########change this for 
 
 ch_1_df_sorted_val = ch_1_df.sort_values(["Genomic_Coordinate"])
 
-
 ########################################################################################################################
 '''Calculating correlation values'''
 distance = []
@@ -35,9 +34,9 @@ for i in range(len(ch_1_df_sorted_val["Genomic_Coordinate"]) - 1):
     if second_coord["Genomic_Coordinate"] - first_coord["Genomic_Coordinate"] <= 8000:
         dis = second_coord["Genomic_Coordinate"] - first_coord["Genomic_Coordinate"]
         distance.append(dis)
-        first_calc_val = first_coord.iloc[1:50]
+        first_calc_val = first_coord.iloc[1:51]
         # print(first_calc_val)
-        second_calc_val = second_coord.iloc[1:50]
+        second_calc_val = second_coord.iloc[1:51]
 
         # calc pearson
         cor_v, pval = sp.pearsonr(first_calc_val, second_calc_val)
@@ -51,7 +50,10 @@ distance = np.array(distance, dtype=float)
 
 # slope, intercept, r, p, se = sp.linregress(distance,correlation_v)
 slope, intercept, r_value, p_value, std_err = sp.linregress(distance, correlation_v)
+r_value_lin_r = r_value
+r_sq_val_lin_r = r_value_lin_r**2
 
+print(f'the r value for lin regress in {r_value_lin_r:2f}, and the r^2 value is {r_sq_val_lin_r:2f}')
 # Calculate the regression line
 regression_line = slope * distance + intercept
 ####################################################################################################################
@@ -87,7 +89,7 @@ for i in range(50000):
 
 
 cor_val = np.mean(cor_val_list)
-print(cor_val)
+print(f'the correlation value for the baseline is {cor_val}')
 
 # location of coordinates lists
 LoC_DF_1 = random_dataframe_1[["Genomic_Coordinate"]]
@@ -110,16 +112,15 @@ lowess_y = lowess[:, 1]
 # Sort the LOWESS values by distance
 lowess_x, lowess_y = zip(*sorted(zip(lowess_x, lowess_y)))
 
-# Plot the LOWESS regression line
-plt.plot(lowess_x, lowess_y, color='green', label='LOWESS Regression Line')
 
 
 
 
 
 # plotting the data
+plt.axhline(y=cor_val, color='blue', linestyle='--', label='Baseline')
 plt.plot(distance, regression_line, color='red', label='Linear Regression Line')
-plt.axhline(y=cor_val, color='blue', linestyle='--', label=f'Correlation Value: {cor_val}')
+plt.plot(lowess_x, lowess_y, color='green', label='LOWESS Regression Line')
 plt.ylim(0.1, 0.6)
 plt.xlabel('Distance')
 plt.ylabel('Correlation Value')
